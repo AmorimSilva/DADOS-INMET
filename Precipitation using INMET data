@@ -1,0 +1,322 @@
+from google.colab import files
+uploaded = files.upload()
+for filename in uploaded.keys():
+    print(f'Arquivo "{filename}" foi carregado com sucesso!')
+import os
+if not os.path.exists('files'):
+    os.makedirs('files')
+import shutil
+for filename in uploaded.keys():
+    shutil.move(filename, f'files/{filename}')
+print('\nLista de arquivos no diretório atual:')
+for file in os.listdir('files'):
+    print(file)
+
+#####
+import pandas as pd
+!pip install seaborn
+import seaborn as sns
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates 
+#####
+
+file_path_bage = 'files/bage_MENSAL.csv'  # Altere 'seu_arquivo.csv' para o nome do seu arquivo
+file_path_balsas = 'files/balsas_MENSAL.csv'  # Altere 'seu_arquivo.csv' para o nome do seu arquivo
+df_bage = pd.read_csv(file_path_bage, skiprows=9, sep=';')
+df_balsas= pd.read_csv(file_path_balsas, skiprows=9, sep=';')
+df_bage = df_bage.iloc[:, :-1]
+df_balsas = df_balsas.iloc[:, :-1]
+
+#####
+
+#BAGE
+df_bage['Data Medicao'] = df_bage['Data Medicao'].astype(str)
+
+if df_bage['Data Medicao'].isnull().any():
+    df_bage['Data Medicao'].fillna('', inplace=True)
+df_bage[['Ano', 'Mês', 'Dia']] = df_bage['Data Medicao'].str.split('-', expand=True)
+
+df_bage['PRECIPITACAO TOTAL, MENSAL (AUT)(mm)'] = df_bage['PRECIPITACAO TOTAL, MENSAL (AUT)(mm)'].astype(str)
+df_bage['PRECIPITACAO TOTAL, MENSAL (AUT)(mm)'] = df_bage['PRECIPITACAO TOTAL, MENSAL (AUT)(mm)'].str.replace(',', '.')
+df_bage['PRECIPITACAO TOTAL, MENSAL (AUT)(mm)'] = pd.to_numeric(df_bage['PRECIPITACAO TOTAL, MENSAL (AUT)(mm)'], errors='coerce')
+
+# BALSAS
+df_balsas['Data Medicao'] = df_balsas['Data Medicao'].astype(str)
+
+if df_balsas['Data Medicao'].isnull().any():
+    df_balsas['Data Medicao'].fillna('', inplace=True)
+df_balsas[['Ano', 'Mês', 'Dia']] = df_balsas['Data Medicao'].str.split('-', expand=True)
+
+df_balsas['PRECIPITACAO TOTAL, MENSAL (AUT)(mm)'] = df_balsas['PRECIPITACAO TOTAL, MENSAL (AUT)(mm)'].astype(str)
+df_balsas['PRECIPITACAO TOTAL, MENSAL (AUT)(mm)'] = df_balsas['PRECIPITACAO TOTAL, MENSAL (AUT)(mm)'].str.replace(',', '.')
+df_balsas['PRECIPITACAO TOTAL, MENSAL (AUT)(mm)'] = pd.to_numeric(df_balsas['PRECIPITACAO TOTAL, MENSAL (AUT)(mm)'], errors='coerce')
+df_balsas = df_balsas.sort_values(by='Mês', ascending=True)
+
+
+#BAGE
+df_bage['PRECIPITACAO TOTAL, MENSAL (AUT)(mm)'] = pd.to_numeric(df_bage['PRECIPITACAO TOTAL, MENSAL (AUT)(mm)'], errors='coerce')
+plt.figure(figsize=(10, 5))
+plt.subplot(1, 2, 1)
+bp1 = sns.boxplot(x='Mês', y='PRECIPITACAO TOTAL, MENSAL (AUT)(mm)', data=df_bage, showfliers=True, color='gray')
+for patch in bp1.artists:
+    patch.set_alpha(0.5)
+medias_mensais1 = df_bage.groupby('Mês')['PRECIPITACAO TOTAL, MENSAL (AUT)(mm)'].mean()
+plt.plot(medias_mensais1.index, medias_mensais1.values, marker='o', color='black', label='Médias Mensais')
+plt.scatter(df_bage['Mês'], df_bage['PRECIPITACAO TOTAL, MENSAL (AUT)(mm)'], color='black', alpha=0.5, label='Observações')
+plt.xlabel('Mês')
+plt.ylabel('Precipitação Total (mm/mês)')
+plt.title('Bagé/RS')
+
+#BALSAS
+df_balsas['PRECIPITACAO TOTAL, MENSAL (AUT)(mm)'] = pd.to_numeric(df_balsas['PRECIPITACAO TOTAL, MENSAL (AUT)(mm)'], errors='coerce')
+plt.subplot(1, 2, 2)
+bp2 = sns.boxplot(x='Mês', y='PRECIPITACAO TOTAL, MENSAL (AUT)(mm)', data=df_balsas, showfliers=True, color='gray')
+for patch in bp2.artists:
+    patch.set_alpha(0.5)
+medias_mensais2 = df_balsas.groupby('Mês')['PRECIPITACAO TOTAL, MENSAL (AUT)(mm)'].mean()
+plt.plot(medias_mensais2.index, medias_mensais2.values, marker='o', color='black', label='Médias Mensais')
+plt.scatter(df_balsas['Mês'], df_balsas['PRECIPITACAO TOTAL, MENSAL (AUT)(mm)'], color='black', alpha=0.5, label='Observações')
+plt.xlabel('Mês')
+plt.ylabel('')
+plt.title('Balsas/MA')
+plt.legend(loc='upper left', bbox_to_anchor=(1.05, 1), frameon=False)
+ymin = min(df_bage['PRECIPITACAO TOTAL, MENSAL (AUT)(mm)'].min(), df_balsas['PRECIPITACAO TOTAL, MENSAL (AUT)(mm)'].min())
+ymax = max(df_bage['PRECIPITACAO TOTAL, MENSAL (AUT)(mm)'].max(), df_balsas['PRECIPITACAO TOTAL, MENSAL (AUT)(mm)'].max())
+plt.ylim(ymin, ymax)
+
+plt.tight_layout()
+plt.show()
+
+#####
+
+file_path_bage_diario = 'files/bage_DIARIO.csv'
+file_path_balsas_diario = 'files/balsas_DIARIO.csv'
+df_bage_diario = pd.read_csv(file_path_bage_diario, skiprows=9, sep=';')
+df_balsas_diario = pd.read_csv(file_path_balsas_diario, skiprows=9, sep=';')
+df_bage_diario = df_bage_diario.iloc[:, :-1]
+df_balsas_diario = df_balsas_diario.iloc[:, :-1]
+
+plt.figure(figsize=(6, 3))
+plt.plot(df_bage_diario['Data Medicao'], df_bage_diario['PRECIPITACAO TOTAL, DIARIO (AUT)(mm)'],
+         label='Bagé/RS', linestyle='-', color='black', linewidth=0.8)
+plt.plot(df_balsas_diario['Data Medicao'], df_balsas_diario['PRECIPITACAO TOTAL, DIARIO (AUT)(mm)'],
+         label='Balsas/MA', linestyle='-', color='gray', linewidth=0.8)
+
+plt.xlabel('Data')
+plt.xticks(rotation=45)
+plt.ylabel('Precipitação (mm/dia)')
+plt.legend(loc='upper left', bbox_to_anchor=(1.05, 1), frameon=False)
+
+plt.show()
+
+#####
+
+#DIAS SEGUIDOS SEM CHUVA E O TIME
+def calcular_dias_consecutivos_sem_chuva(df):
+    consecutivos_sem_chuva = 0
+    dias_consecutivos = []
+    data_inicial = None
+    data_final = None
+    for idx, row in df.iterrows():
+        if pd.isna(row['PRECIPITACAO TOTAL, DIARIO (AUT)(mm)']):
+            consecutivos_sem_chuva = 0 
+            data_inicial = None
+            data_final = None
+        elif row['PRECIPITACAO TOTAL, DIARIO (AUT)(mm)'] == 0:
+            if consecutivos_sem_chuva == 0:
+                data_inicial = row['Data Medicao']
+            consecutivos_sem_chuva += 1
+            data_final = row['Data Medicao']
+        else:
+            if consecutivos_sem_chuva > 0:
+                dias_consecutivos.append({
+                    'dias': consecutivos_sem_chuva,
+                    'data_inicial': data_inicial,
+                    'data_final': data_final
+                })
+                consecutivos_sem_chuva = 0
+                data_inicial = None
+                data_final = None
+    if consecutivos_sem_chuva > 0: 
+        dias_consecutivos.append({
+            'dias': consecutivos_sem_chuva,
+            'data_inicial': data_inicial,
+            'data_final': data_final
+        })
+    return dias_consecutivos
+
+dias_consecutivos_bage = calcular_dias_consecutivos_sem_chuva(df_bage_diario)
+dias_consecutivos_balsas = calcular_dias_consecutivos_sem_chuva(df_balsas_diario)
+
+#Encontrar a maior repetição de dias consecutivos sem chuva
+maior_repeticao_bage = max(dias_consecutivos_bage, key=lambda x: x['dias']) if dias_consecutivos_bage else None
+maior_repeticao_balsas = max(dias_consecutivos_balsas, key=lambda x: x['dias']) if dias_consecutivos_balsas else None
+
+print("Maior repetição de dias consecutivos sem chuva para Bagé:", maior_repeticao_bage)
+print("Maior repetição de dias consecutivos sem chuva para Balsas:", maior_repeticao_balsas)
+
+#quantidade de dias consecutivos sem chuva
+def calcular_dias_consecutivos_sem_chuva(df):
+    consecutivos_sem_chuva = 0
+    dias_consecutivos = []
+    for idx, row in df.iterrows():
+        if row['PRECIPITACAO TOTAL, DIARIO (AUT)(mm)'] == 0:
+            consecutivos_sem_chuva += 1
+        else:
+            if consecutivos_sem_chuva > 0:
+                dias_consecutivos.append(consecutivos_sem_chuva)
+                consecutivos_sem_chuva = 0
+    if consecutivos_sem_chuva > 0:
+        dias_consecutivos.append(consecutivos_sem_chuva)
+    return dias_consecutivos
+
+dias_consecutivos_bage = calcular_dias_consecutivos_sem_chuva(df_bage_diario)
+dias_consecutivos_balsas = calcular_dias_consecutivos_sem_chuva(df_balsas_diario)
+
+# AJUSTAR AS COLUNAS
+df_bage_diario['Data Medicao'] = pd.to_datetime(df_bage_diario['Data Medicao'])
+df_bage_diario['Ano'] = df_bage_diario['Data Medicao'].dt.year
+df_balsas_diario['Data Medicao'] = pd.to_datetime(df_balsas_diario['Data Medicao'])
+df_balsas_diario['Ano'] = df_balsas_diario['Data Medicao'].dt.year
+
+df_bage_diario['Data Medicao'] = pd.to_datetime(df_bage_diario['Data Medicao'])
+df_bage_diario['Mes'] = df_bage_diario['Data Medicao'].dt.month
+df_balsas_diario['Data Medicao'] = pd.to_datetime(df_balsas_diario['Data Medicao'])
+df_balsas_diario['Mes'] = df_balsas_diario['Data Medicao'].dt.month
+
+# Plotar os gráficos
+fig, axes = plt.subplots(2, 2, figsize=(12, 8))
+
+# Gráfico1
+dias_sem_chuva_por_ano_bage = df_bage_diario[df_bage_diario['PRECIPITACAO TOTAL, DIARIO (AUT)(mm)'] == 0.0].groupby('Ano').size()
+dias_sem_chuva_por_ano_balsas = df_balsas_diario[df_balsas_diario['PRECIPITACAO TOTAL, DIARIO (AUT)(mm)'] == 0.0].groupby('Ano').size()
+dias_sem_chuva_por_ano = pd.concat([dias_sem_chuva_por_ano_bage, dias_sem_chuva_por_ano_balsas], axis=1)
+dias_sem_chuva_por_ano.plot(kind='bar', ax=axes[0, 0], color=['black', 'gray'], title='Dias sem chuva por ano')
+axes[0, 0].set_ylabel('Dias')
+axes[0, 0].get_legend().remove()
+
+#Gráfico2
+dias_sem_chuva_por_mes_bage = df_bage_diario[df_bage_diario['PRECIPITACAO TOTAL, DIARIO (AUT)(mm)'] == 0.0].groupby('Mes').size()
+dias_sem_chuva_por_mes_balsas = df_balsas_diario[df_balsas_diario['PRECIPITACAO TOTAL, DIARIO (AUT)(mm)'] == 0.0].groupby('Mes').size()
+dias_sem_chuva_por_mes = pd.concat([dias_sem_chuva_por_mes_bage, dias_sem_chuva_por_mes_balsas], axis=1)
+dias_sem_chuva_por_mes_plot = dias_sem_chuva_por_mes.plot(kind='bar', ax=axes[0, 1], color=['black', 'gray'], title='Dias sem chuva por mês')
+axes[0, 1].set_ylabel('Dias')
+dias_sem_chuva_por_mes_plot.legend(['Bagé/RS', 'Balsas/MA'], loc='center left', bbox_to_anchor=(1.3, 0.4))
+
+#Gráfico3
+nan_por_ano_bage = df_bage_diario['PRECIPITACAO TOTAL, DIARIO (AUT)(mm)'].isna().groupby(df_bage_diario['Ano']).sum()
+nan_por_ano_balsas = df_balsas_diario['PRECIPITACAO TOTAL, DIARIO (AUT)(mm)'].isna().groupby(df_balsas_diario['Ano']).sum()
+nan_por_ano = pd.concat([nan_por_ano_bage, nan_por_ano_balsas], axis=1)
+nan_por_ano_plot = nan_por_ano.plot(kind='bar', ax=axes[1, 0], color=['black', 'gray'], title='Quantidade de dados faltantes por ano')
+axes[1, 0].set_ylabel('NaN')
+nan_por_ano_plot.get_legend().remove()
+
+#Gráfico4
+hist_bage = axes[1, 1].hist(dias_consecutivos_bage, bins=min(max(dias_consecutivos_bage),31), color='gray', alpha=0.7, range=(0, 40))
+hist_balsas = axes[1, 1].hist(dias_consecutivos_balsas, bins=min(max(dias_consecutivos_balsas),31), color='black', alpha=0.7, range=(0, 40))
+axes[1, 1].set_title('Dias consecutivos sem chuva')
+axes[1, 1].set_xlabel('Dias consecutivos')
+axes[1, 1].set_ylabel('Frequência')
+
+#INFOS
+info_extra = f"1. Dados faltantes para Bagé/RS: {nan_por_ano_bage.max()}\n2. Dados faltantes para Balsas/MA: {nan_por_ano_balsas.max()}"
+info_extra += f"\n3. Maior périodo de dias consecutivos sem chuva:\n   - Bagé: 31 dias(07/10/2010 a 06/11/2010) \n   - Balsas: 138 dias (12/06/2017 a 27/10/2017)" #adicionar manualmente os dias
+axes[0, 1].text(x=1.03, y=1.5, s=info_extra, horizontalalignment='left', verticalalignment='center', transform=axes[1, 1].transAxes)
+
+
+plt.tight_layout()
+plt.show()
+
+#####################
+
+
+file_path_bage_horario = 'files/bage_HORARIO.csv'
+file_path_balsas_horario = 'files/balsas_HORARIO.csv'
+df_bage_horario = pd.read_csv(file_path_bage_horario, skiprows=9, sep=';')
+df_balsas_horario = pd.read_csv(file_path_balsas_horario, skiprows=9, sep=';')
+df_bage_horario = df_bage_horario.iloc[:, :-1]
+df_balsas_horario = df_balsas_horario.iloc[:, :-1]
+
+#### ajustando o formato da hora do bdmep
+
+def padronizar_horas(df):
+    df['Hora Medicao'] = df['Hora Medicao'].astype(str).str.zfill(4)
+    df['Hora Medicao'] = df['Hora Medicao'].str[:2] + ':' + df['Hora Medicao'].str[2:]
+    return df
+
+df_bage_horario = padronizar_horas(df_bage_horario)
+df_balsas_horario = padronizar_horas(df_balsas_horario)
+
+#### SEPARAR O MÊS DAS DATAS (PARA PODER CONSTRUIR O PERIODO SECO E CHUVOSO)
+
+def separar_mes(df):
+    df['Mês'] = pd.to_datetime(df['Data Medicao']).dt.month
+    return df
+
+df_bage_horario = separar_mes(df_bage_horario)
+df_balsas_horario = separar_mes(df_balsas_horario)
+
+##
+
+#DEFINIR AQUI O PERIODO SECO E CHUVOSO
+def definir_periodo(mes):
+    if mes >= 5 and mes <= 10:
+        return 'seco'
+    else:
+        return 'chuvoso'
+####################################
+def adicionar_periodo(df):
+    df['Periodo'] = df['Mês'].apply(definir_periodo)
+    return df
+
+df_bage_horario = adicionar_periodo(df_bage_horario)
+df_balsas_horario = adicionar_periodo(df_balsas_horario)
+
+def calcular_media_horaria(df):
+    media_horaria_seco = df[df['Periodo'] == 'seco'].groupby('Hora Medicao')['PRECIPITACAO TOTAL, HORARIO(mm)'].mean()
+    media_horaria_chuvoso = df[df['Periodo'] == 'chuvoso'].groupby('Hora Medicao')['PRECIPITACAO TOTAL, HORARIO(mm)'].mean()
+    return media_horaria_seco, media_horaria_chuvoso
+
+def calcular_media_geral(media_horaria_seco, media_horaria_chuvoso):
+    media_geral = media_horaria_seco + media_horaria_chuvoso
+    return media_geral
+
+media_horaria_seco_bage, media_horaria_chuvoso_bage = calcular_media_horaria(df_bage_horario)
+media_horaria_seco_balsas, media_horaria_chuvoso_balsas = calcular_media_horaria(df_balsas_horario)
+
+media_geral_bage = calcular_media_geral(media_horaria_seco_bage, media_horaria_chuvoso_bage)
+media_geral_balsas = calcular_media_geral(media_horaria_seco_balsas, media_horaria_chuvoso_balsas)
+
+###
+
+plt.figure(figsize=(10, 5))
+
+#Bagé
+plt.subplot(1, 2, 1)
+plt.plot(media_horaria_seco_bage.index, media_horaria_seco_bage, color='black', linestyle='-', label='Seco')
+plt.plot(media_horaria_chuvoso_bage.index, media_horaria_chuvoso_bage, color='black', linestyle='--', label='Chuvoso')
+plt.plot(media_geral_bage.index, media_geral_bage, color='#4c4c4c', linestyle='dotted', label='Média Geral')
+plt.title('Bagé/RS' )
+plt.xticks(rotation=45)
+plt.ylim(0, 0.40)
+plt.xlabel('Horas')
+plt.ylabel('Precipitação (mm/hora)')
+plt.xticks(range(0, 24, 2)) 
+
+#Balsas
+plt.subplot(1, 2, 2)
+plt.plot(media_horaria_seco_balsas.index, media_horaria_seco_balsas, color='gray', linestyle='-', label='Seco')
+plt.plot(media_horaria_chuvoso_balsas.index, media_horaria_chuvoso_balsas, color='gray', linestyle='--', label='Chuvoso')
+plt.plot(media_geral_balsas.index, media_geral_balsas, color='#4c4c4c', linestyle='dotted', label='Média Geral')
+plt.title('Balsas/MA')
+plt.xticks(rotation=45)
+plt.ylim(0, 0.40)
+plt.xlabel('Horas')
+plt.legend(loc='lower left', bbox_to_anchor=(1.0, 0.4), frameon=False)
+plt.xticks(range(0, 24, 2)) 
+
+plt.tight_layout()
+plt.show()
+
+
+
